@@ -53,13 +53,7 @@ public class EscapeRoom implements ActionListener
   public static boolean isStroke = false;
   public static Thread onEnter;
   public static boolean onEnterNull = true;
-
-  public static void println(String output) {
-    System.out.println(output);
-  }
-  public static void print(String output) {
-    System.out.print(output);
-  }
+  
   public static void main(String[] args)
   {
     // welcome message
@@ -198,11 +192,12 @@ public class EscapeRoom implements ActionListener
         }
       };
     } else if (buttonName == "replay") {
+      int steps = game.getSteps(1) + game.getSteps(2);
       int temp = game.replay();
       score += temp;
       player = 1;
       game.text(1,"score: " + score,29*60-10*21,16*60-40,40);
-      game.text(2,"steps=" + (game.getSteps(1) + game.getSteps(2)),29*60-10*21,16*60-10,40);
+      game.text(2,"steps=" + steps,29*60-10*21,16*60-10,40);
       if (temp > 0) {
         game.text(3,"YOU MADE IT!",29*(int)(60/2)-(14/2*(int)(21/40.0*75)),16*(int)(60/2)-(int)(10/40.0*75),75);
         game.text(4,"Press enter to continue.",29*(int)(60/2)-(22/2*(int)(21/40.0*75)),16*(int)(60/2)+(int)(40/40.0*75),75);
@@ -226,7 +221,7 @@ public class EscapeRoom implements ActionListener
         }
       };
     } else if (buttonName == "switch") {
-      if (player == 1) { player = 2; println("player 2's turn."); } else if (player == 2) { player = 1; println("player 1's turn."); }
+      if (player == 1) { player = 2; } else if (player == 2) { player = 1; }
       game.text(2,"player: " + player,29*60-11*19,16*60-50,40);
       game.repaintScreen();
     } else if (buttonName == "mute") {
