@@ -8,7 +8,6 @@ import java.awt.Font;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 
-import java.io.File;
 import javax.imageio.ImageIO;
 
 import java.util.Random;
@@ -26,51 +25,54 @@ public class GameGUI extends JComponent
   //private static final int WIDTH = 510;
   private static final int GRID_W = 29;
   private static final int GRID_H = 16;
-  private static final int WIDTH = 60*GRID_W+14;
-  private static final int HEIGHT = 60*GRID_H+36;
+  public static final int WIDTH = 60*GRID_W+14;
+  public static final int HEIGHT = 60*GRID_H+36;
   private static final int SPACE_SIZE = 60;
-  private static final int START_LOC_X = 15;
-  private static final int START_LOC_Y = 15;
-  private static final int START_LOC_X2 = 15;
-  private static final int START_LOC_Y2 = (GRID_H-1)*60+15;
+  public static final int START_LOC_X = 15;
+  public static final int START_LOC_Y = 15;
+  public static final int START_LOC_X2 = 15;
+  public static final int START_LOC_Y2 = (GRID_H-1)*60+15;
   
-  private static int pSize = 40;
+  public static int pSize = 40;
 
   // initial placement of player
-  int x = START_LOC_X; 
-  int y = START_LOC_Y;
-  int x2 = START_LOC_X2;
-  int y2 = START_LOC_Y2;
+  public int x = START_LOC_X; 
+  public int y = START_LOC_Y;
+  public int x2 = START_LOC_X2;
+  public int y2 = START_LOC_Y2;
 
   // grid image to show in background
   private Image bgImage;
 
   // player image and info
   private Image player;
-  private Point playerLoc;
+  public Point playerLoc;
   private int playerSteps;
   private Image player2;
-  private Point player2Loc;
+  public Point player2Loc;
   private int player2Steps;
 
   // walls, prizes, traps
   private int totalWalls;
   private Rectangle[] walls;
-  private Image wallImage;
-  private Image wall2Image;
-  private Image prizeImage;
-  private Image trapImage;
   private int totalPrizes;
   private Rectangle[] prizes;
   private int totalTraps;
   private Rectangle[] traps;
+  private Image wallImage;
+  private Image wall2Image;
+  private Image prizeImage;
+  private Image trapImage;
+  private Image trappedPrizeImage;
+
   private Image frankImage;
+  private Image overlayImage;
 
   public int imageMode = 1;
 
   // scores, sometimes awarded as (negative) penalties
   private int prizeVal = 10;
-  private int trapVal = 5;
+  private int trapVal = -5;
   private int endVal = 10;
   private int offGridVal = 5; // penalty only
   private int hitWallVal = 5;  // penalty only
@@ -80,6 +82,8 @@ public class GameGUI extends JComponent
   private int[] textx = new int[texts];
   private int[] texty = new int[texts];
   private int[] textS = new int[texts];
+
+  public boolean overlay = false;
 
   // game frame
   public JFrame frame;
@@ -102,9 +106,9 @@ public class GameGUI extends JComponent
       System.err.println("Could not open file COIN.png");
     }
     try {
-      trapImage = ImageIO.read(EscapeRoom.class.getResource("rock.png"));
+      trapImage = ImageIO.read(EscapeRoom.class.getResource("steven.png"));
     } catch (Exception e) {
-      System.err.println("Could not open file ROCK.png");
+      System.err.println("Could not open file STEVEN.png");
     }
     try {
       wallImage = ImageIO.read(EscapeRoom.class.getResource("wall.png"));
@@ -127,11 +131,23 @@ public class GameGUI extends JComponent
       player2 = ImageIO.read(EscapeRoom.class.getResource("dukeSmall.png"));
     } catch (Exception e) {
      System.err.println("Could not open file DUKESMALL.png");
-    }try {
+    }
+    try {
+      overlayImage = ImageIO.read(EscapeRoom.class.getResource("overlay.png"));
+    } catch (Exception e) {
+     System.err.println("Could not open file OVERLAY.png");
+    }
+    try {
+      trappedPrizeImage = ImageIO.read(EscapeRoom.class.getResource("trappedCoin.png"));
+    } catch (Exception e) {
+     System.err.println("Could not open file TRAPPEDCOIN.png");
+    }
+    try {
       frankImage = ImageIO.read(EscapeRoom.class.getResource("frank.png"));
     } catch (Exception e) {
      System.err.println("Could not open file FRANK.png");
     }
+    
     // save player location
     playerLoc = new Point(x,y);
     player2Loc = new Point(x2,y2);
@@ -146,8 +162,9 @@ public class GameGUI extends JComponent
 
     // set default config
     totalWalls = 100;
-    totalPrizes = 15;
-    totalTraps = 15;
+    Random rand = new Random();
+    totalPrizes = rand.nextInt(20) + 10;
+    totalTraps = rand.nextInt(20) + 10;
   }
  /**
   * After a GameGUI object is created, this method adds the walls, prizes, and traps to the gameboard.
@@ -275,8 +292,7 @@ public class GameGUI extends JComponent
    * @param newy a location indicating the space above or below the player
    * @return true if the new location has a trap that has not been sprung, false otherwise
    */
-  public boolean isTrap(int newx, int newy,int plIn)
-  {
+  public boolean isTrap(int newx, int newy,int plIn) {
     double px = 0;
     double py = 0;
     if (plIn == 1) {
@@ -287,31 +303,23 @@ public class GameGUI extends JComponent
       py = player2Loc.getY() + newy;
     }
 
-
-    for (Rectangle r: traps)
-    {
+    for (Rectangle r: traps) {
       // DEBUG: System.out.println("trapx:" + r.getX() + " trapy:" + r.getY() + "\npx: " + px + " py:" + py);
       // zero size traps have already been sprung, ignore
-      if (r.getWidth() > 0)
-      {
+      if (r.getWidth() > 0 && r.width != 28) {
         // if new location of player has a trap, return true
-        if (r.contains(px, py))
-        {
+        if (r.contains(px, py)) {
           //System.out.println("A TRAP IS AHEAD");
           return true;
         }
         
-        if (r.contains(px, py))
-        {
+        if (r.contains(px, py)) {
           r.setSize(29,29);
-        } else if (r.contains(px+SPACE_SIZE, py))
-        {
+        } else if (r.contains(px+SPACE_SIZE, py)) {
           r.setSize(29,29);
-        } else if (r.contains(px, py-SPACE_SIZE))
-        {
+        } else if (r.contains(px, py-SPACE_SIZE)) {
           r.setSize(29,29);
-        } else if (r.contains(px, py+SPACE_SIZE))
-        {
+        } else if (r.contains(px, py+SPACE_SIZE)) {
           r.setSize(29,29);
         }
       }
@@ -386,14 +394,34 @@ public class GameGUI extends JComponent
       // if location has a prize, pick it up
       if (p.getWidth() > 0 && p.contains(px, py))
       {
-        System.out.println("YOU PICKED UP A PRIZE!");
-        p.setSize(0,0);
-        repaint();
-        return prizeVal;
+        if (p.width != 16) {
+          System.out.println("YOU PICKED UP A PRIZE!");
+          p.setSize(0,0);
+          repaint();
+          return prizeVal;
+        } else {
+          System.out.println("THAT PRIZE WAS TRAPPED!");
+          p.setSize(0,0);
+          EscapeRoom.stroke2();
+          new Thread() {
+            public void run() {
+              int tempx = x;
+              int tempy = y;
+              int tempx2 = x2;
+              int tempy2 = y2;
+              try {
+                Thread.sleep(3000);
+                EscapeRoom.stopStroke2(tempx, tempy, tempx2, tempy2);
+              } catch (Exception e) { }
+            }
+          }.start();
+
+          return (int)(prizeVal*-2.5);
+        }
       }
     }
     System.out.println("OOPS, NO PRIZE HERE");
-    return -prizeVal;  
+    return -prizeVal;
   }
 
   /**
@@ -497,6 +525,8 @@ public class GameGUI extends JComponent
     Graphics2D g2 = (Graphics2D)g;
 
     // draw grid
+    //x=68
+    //y=32
     if (imageMode == 1) {
       g.drawImage(bgImage, 0, 0, 60*8,60*5,null);
       g.drawImage(bgImage, 60*8, 0, 60*8,60*5,null);
@@ -547,9 +577,9 @@ public class GameGUI extends JComponent
         int x = (int)t.getX();
         int y = (int)t.getY();
         if (imageMode == 1) {
-          g.drawImage(trapImage, x, y,30,30, null);
+          g.drawImage(trapImage, x, y,50,50, null);
         } else if (imageMode == 2) {
-          g.drawImage(frankImage, x, y,30,30, null);
+          g.drawImage(frankImage, x, y,50,50, null);
         }
       }
     }
@@ -558,12 +588,17 @@ public class GameGUI extends JComponent
     for (Rectangle p : prizes)
     {
       // picked up prizes are 0 size so don't render
-      if (p.getWidth() > 0) 
+      if (p.getWidth() > 0)
       {
         int px = (int)p.getX();
         int py = (int)p.getY();
         if (imageMode == 1) {
-          g.drawImage(prizeImage, px, py, 40,40,null);
+          System.out.println(p.width);
+          if (p.width == 16) {
+            g.drawImage(trappedPrizeImage, px, py, 40,40,null);
+          } else {
+            g.drawImage(prizeImage, px, py, 40,40,null);
+          }
         } else if (imageMode == 2) {
           g.drawImage(frankImage, px, py, 40,40,null);
         }
@@ -595,15 +630,6 @@ public class GameGUI extends JComponent
       //g2.fill(r);
     }
 
-    //render text on screen
-    for (int i = 0; i < texts; i++) {
-      if (text[i] != null && text[i] != "") {
-        Font font = new Font("Arial", Font.PLAIN, textS[i]);
-        g2.setFont(font);
-        g2.drawString(text[i],textx[i],texty[i]);
-      }
-    }
-
     // draw player, saving its location
     if (imageMode == 1) {
       g.drawImage(player, x, y, pSize,pSize, null);
@@ -615,6 +641,20 @@ public class GameGUI extends JComponent
       playerLoc.setLocation(x,y);
       g.drawImage(frankImage, x2, y2, pSize,pSize, null);
       player2Loc.setLocation(x2,y2);
+    }
+
+
+    if (overlay) {
+      g.drawImage(overlayImage, 0, 0, WIDTH, HEIGHT, null);
+    }
+
+    //render text on screen
+    for (int i = 0; i < texts; i++) {
+      if (text[i] != null && text[i] != "") {
+        Font font = new Font("Arial", Font.PLAIN, textS[i]);
+        g2.setFont(font);
+        g2.drawString(text[i],textx[i],texty[i]);
+      }
     }
   }
 
@@ -632,13 +672,25 @@ public class GameGUI extends JComponent
      {
       int h = rand.nextInt(GRID_H);
       int w = rand.nextInt(GRID_W);
-      while ( (w == (START_LOC_X-15)/60 && h == (START_LOC_Y-15)/60) || (w == (START_LOC_X2-15)/60 && h == (START_LOC_Y2-15)/60)) {
+      while ( (w == (START_LOC_X-15)/s && h == (START_LOC_Y-15)/s) || (w == (START_LOC_X2-15)/s && h == (START_LOC_Y2-15)/s)) {
         h = rand.nextInt(GRID_H);
         w = rand.nextInt(GRID_W);
       }
-
+      boolean trappedPrize = false;
+      for ( Rectangle trap : traps) {
+        if (trap.x == w*s+5 && trap.y == h*s+5) {
+          trappedPrize = true;
+          trap.width = 28;
+          trap.height = 28;
+          break;
+        }
+      }
       Rectangle r;
-      r = new Rectangle((w*s + 15),(h*s + 15), 15, 15);
+      if (!trappedPrize) {
+        r = new Rectangle((w*s + 15),(h*s + 15), 15, 15);
+      } else {
+        r = new Rectangle((w*s + 15),(h*s + 15), 16, 16);
+      }
       prizes[numPrizes] = r;
      }
   }
@@ -655,13 +707,13 @@ public class GameGUI extends JComponent
      {
       int h = rand.nextInt(GRID_H);
       int w = rand.nextInt(GRID_W);
-      while ( (w == (START_LOC_X-15)/60 && h == (START_LOC_Y-15)/60) || (w == (START_LOC_X2-15)/60 && h == (START_LOC_Y2-15)/60)) {
+      while ( (w == (START_LOC_X-5)/60 && h == (START_LOC_Y-5)/60) || (w == (START_LOC_X2-5)/60 && h == (START_LOC_Y2-5)/60)) {
         h = rand.nextInt(GRID_H);
         w = rand.nextInt(GRID_W);
       }
 
       Rectangle r;
-      r = new Rectangle((w*s + 15),(h*s + 15), 30, 30);
+      r = new Rectangle((w*s + 5),(h*s + 5), 30, 30);
       traps[numTraps] = r;
      }
   }
@@ -698,20 +750,20 @@ public class GameGUI extends JComponent
    * Checks if player as at the far right of the board 
    * @return positive score for reaching the far right wall, penalty otherwise
    */
-  private int playerAtEnd() 
+  public int playerAtEnd()
   {
     int score;
 
     double px = playerLoc.getX();
     double px2 = player2Loc.getX();
-    if (px > (GRID_W-2)*SPACE_SIZE || px2 > (GRID_W-2)*SPACE_SIZE)
+    if (px > (GRID_W-2)*SPACE_SIZE && px2 > (GRID_W-2)*SPACE_SIZE)
     {
-      System.out.println("YOU MADE IT!");
+      //System.out.println("YOU MADE IT!");
       score = endVal;
     }
     else
     {
-      System.out.println("OOPS, YOU QUIT TOO SOON!");
+      //System.out.println("OOPS, YOU QUIT TOO SOON!");
       score = -endVal;
     }
     return score;
@@ -720,6 +772,13 @@ public class GameGUI extends JComponent
     if (imageMode == 2) { imageMode = 1;
     } else if (imageMode == 1) { imageMode = 2; }
     repaint();
+    return imageMode;
+  }
+  public int switchImages(Thread thr) {
+    if (imageMode == 2) { imageMode = 1;
+    } else if (imageMode == 1) { imageMode = 2; }
+    repaint();
+    thr.start();
     return imageMode;
   }
   public void DUKELARGE() {
