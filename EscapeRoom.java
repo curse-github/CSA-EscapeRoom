@@ -60,13 +60,22 @@ public class EscapeRoom implements ActionListener
   private static boolean onEnterNull = true;
   private static JButton[] buttons;
   private static KeyListener listener;
+  public static boolean isMac = false;
+  public static int incrX = 15;
+  public static int incrY = 10;
   
   public static void main(String[] args)
   {
     // welcome message
-    System.out.println("Welcome to EscapeRoom!");
-    System.out.println("Get to the other side of the room, avoiding walls and invisible traps,");
-    System.out.println("pick up all the prizes.\n");
+    //System.out.println("Welcome to EscapeRoom!");
+    //System.out.println("Get to the other side of the room, avoiding walls and invisible traps,");
+    //System.out.println("pick up all the prizes.\n");
+    if (isMac) {
+      GameGUI.WIDTH-=incrX;
+      GameGUI.HEIGHT-=incrY;
+      incrX = 0;
+      incrY = 0;
+    }
 
     game = new GameGUI();
     game.createBoard();
@@ -117,7 +126,7 @@ public class EscapeRoom implements ActionListener
       frame.getContentPane().add(buttons[i]);
     }
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    frame.setSize(500+15,250+25+10);
+    frame.setSize(500+incrX,250+25+incrY);
 
     frame.addKeyListener(listener);
     frame.setFocusable(true);
@@ -126,13 +135,13 @@ public class EscapeRoom implements ActionListener
       public void componentResized(ComponentEvent componentEvent) {
         if (!isStroke) {
           Dimension dimension = frame.getSize();
-          if (dimension.width != 500+15 || dimension.height < 250+25+10 || dimension.height > 250+25+10+50) {
-            int newWidth = 500+15;
+          if (dimension.width != 500+incrX || dimension.height < 250+25+incrY || dimension.height > 250+25+incrY+50) {
+            int newWidth = 500+incrX;
             int newHeight = dimension.height;
-            if (dimension.height < 250+25+10) {
-              newHeight = 250+25+10;
-            } else if (dimension.height > 250+25+10+50) {
-              newHeight = 250+25+10+50;
+            if (dimension.height < 250+25+incrY) {
+              newHeight = 250+25+incrY;
+            } else if (dimension.height > 250+25+incrY+50) {
+              newHeight = 250+25+incrY+50;
             }
             try {
               Thread.sleep(125);
@@ -149,13 +158,13 @@ public class EscapeRoom implements ActionListener
 		public void keyTyped(KeyEvent e) {}
 		@Override
 		public void keyPressed(KeyEvent e) {
-      if (KeyEvent.getKeyText(e.getKeyCode()).equals("Semicolon")) {
-        if (frame.getSize().height == 250+25+10) {
-          frame.setSize(500+15,250+25+10+50);
+      if (e.getKeyCode() == KeyEvent.VK_SEMICOLON) {
+        if (frame.getSize().height == 250+25+incrY) {
+          frame.setSize(500+incrX,250+25+incrY+50);
         } else {
-          frame.setSize(500+15,250+25+10);
+          frame.setSize(500+incrX,250+25+incrY);
         }
-      } else if (KeyEvent.getKeyText(e.getKeyCode()).equals("Enter")) {
+      } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
         if (!onEnterNull) {
           onEnter.start();
           onEnterNull = true;
@@ -188,7 +197,24 @@ public class EscapeRoom implements ActionListener
       py=m*2;
     } else if (buttonName == "pickup") {
       int temp = game.pickupPrize(player);
-    if (temp > 0) { playAudio("coin2.wav"); }
+      if (temp != 0) {
+        playAudio("coin2.wav");
+        if (temp < 10) {
+          stroke2();
+          new Thread() {
+            public void run() {
+              int tempx = game.x;
+              int tempy = game.y;
+              int tempx2 = game.x2;
+              int tempy2 = game.y2;
+              try {
+                Thread.sleep(3000);
+                stopStroke2(tempx, tempy, tempx2, tempy2);
+              } catch (Exception e) { }
+            }
+          }.start();
+        }
+      }
       score += temp;
       game.text(1,"score: " + score,29*60-10*21,16*60-10,40);
       game.repaintScreen();
@@ -337,7 +363,7 @@ public class EscapeRoom implements ActionListener
     isStroke = true;
     strokeType = 1;
 
-    frame.setSize(120,85);
+    frame.setSize(105+incrX,75+incrY);
     for (int i = 0; i < buttons.length; i++) {
       frame.remove(buttons[i]);
     }
@@ -388,6 +414,7 @@ public class EscapeRoom implements ActionListener
       game.y = GameGUI.START_LOC_Y;
       game.x2 = GameGUI.START_LOC_X2;
       game.y2 = GameGUI.START_LOC_Y2;
+      game.overlay = true;
       game.text(1,"score: " + score,29*60-10*21,16*60-40,40);
       game.text(2,"steps=" + (game.getSteps(1) + game.getSteps(2)),29*60-10*21,16*60-10,40);
       if (game.playerAtEnd() > 0) {

@@ -25,8 +25,8 @@ public class GameGUI extends JComponent
   //private static final int WIDTH = 510;
   private static final int GRID_W = 29;
   private static final int GRID_H = 16;
-  public static final int WIDTH = 60*GRID_W+14;
-  public static final int HEIGHT = 60*GRID_H+36;
+  public static int WIDTH = 60*GRID_W+14;
+  public static int HEIGHT = 60*GRID_H+36;
   private static final int SPACE_SIZE = 60;
   public static final int START_LOC_X = 15;
   public static final int START_LOC_Y = 15;
@@ -213,7 +213,7 @@ public class GameGUI extends JComponent
       // check if off grid horizontally and vertically
       if ( (newX < 0 || newX > SPACE_SIZE*GRID_W) || (newY < 0 || newY > SPACE_SIZE*GRID_H) )
       {
-        System.out.println ("OFF THE GRID!");
+        //System.out.println ("OFF THE GRID!");
         return -offGridVal;
       }
 
@@ -239,25 +239,25 @@ public class GameGUI extends JComponent
         // moving RIGHT, check to the right
         if (((incrx*(pSize/40)) > 0) && (xI <= startX) && (startX <= newX) && (yI >= startY) && (yI <= endY))
         {
-          System.out.println("A WALL IS IN THE WAY");
+          //System.out.println("A WALL IS IN THE WAY");
           return -hitWallVal;
         }
         // moving LEFT, check to the left
         else if (((incrx*(pSize/40)) < 0) && (xI >= startX) && (startX >= newX) && (yI >= startY) && (yI <= endY))
         {
-          System.out.println("A WALL IS IN THE WAY");
+          //System.out.println("A WALL IS IN THE WAY");
           return -hitWallVal;
         }
         // moving DOWN check below
         else if (((incry*(pSize/40)) > 0) && (yI <= startY && startY <= newY && xI >= startX && xI <= endX))
         {
-          System.out.println("A WALL IS IN THE WAY");
+          //System.out.println("A WALL IS IN THE WAY");
           return -hitWallVal;
         }
         // moving UP check above
         else if (((incry*(pSize/40)) < 0) && (yI >= startY) && (startY >= newY) && (xI >= startX) && (xI <= endX))
         {
-          System.out.println("A WALL IS IN THE WAY");
+          //System.out.println("A WALL IS IN THE WAY");
           return -hitWallVal;
         }     
       }
@@ -361,14 +361,12 @@ public class GameGUI extends JComponent
         {
           r.setSize(0,0);
           //repaint();
-          System.out.println("TRAP IS SPRUNG!");
+          //System.out.println("TRAP IS SPRUNG!");
           return trapVal;
         }
       }
     }
-    // no trap here, penalty
-    System.out.println("THERE IS NO TRAP HERE TO SPRING");
-    return -trapVal;
+    return 0;
   }
 
   /**
@@ -395,32 +393,18 @@ public class GameGUI extends JComponent
       if (p.getWidth() > 0 && p.contains(px, py))
       {
         if (p.width != 16) {
-          System.out.println("YOU PICKED UP A PRIZE!");
+          //System.out.println("YOU PICKED UP A PRIZE!");
           p.setSize(0,0);
           repaint();
           return prizeVal;
         } else {
-          System.out.println("THAT PRIZE WAS TRAPPED!");
+          //System.out.println("THAT PRIZE WAS TRAPPED!");
           p.setSize(0,0);
-          EscapeRoom.stroke2();
-          new Thread() {
-            public void run() {
-              int tempx = x;
-              int tempy = y;
-              int tempx2 = x2;
-              int tempy2 = y2;
-              try {
-                Thread.sleep(3000);
-                EscapeRoom.stopStroke2(tempx, tempy, tempx2, tempy2);
-              } catch (Exception e) { }
-            }
-          }.start();
-
           return (int)(prizeVal*-2.5);
         }
       }
     }
-    System.out.println("OOPS, NO PRIZE HERE");
+    //System.out.println("OOPS, NO PRIZE HERE");
     return -prizeVal;
   }
 
@@ -593,7 +577,6 @@ public class GameGUI extends JComponent
         int px = (int)p.getX();
         int py = (int)p.getY();
         if (imageMode == 1) {
-          System.out.println(p.width);
           if (p.width == 16) {
             g.drawImage(trappedPrizeImage, px, py, 40,40,null);
           } else {
